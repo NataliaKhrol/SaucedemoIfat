@@ -5,54 +5,40 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class PropertyReader {
-
-    private static String propertiesPath = "/config.properties";
+    private static final String PROPERTIES_PATH = "/config.properties";
     private static volatile Properties properties;
-    private static InputStream inputStream;
 
     private PropertyReader() {
     }
 
-    private static String getCorrectPath() {
-        if (propertiesPath.charAt(0) != '/') {
-            propertiesPath = "/" + propertiesPath;
-        }
-        return propertiesPath;
+    public static String getProperty(String propertyName) {
+        return getProperties().getProperty(propertyName);
     }
 
-    public static Properties readProperties() {
-        properties = new Properties();
-        try {
-            inputStream = PropertyReader.class.getResourceAsStream(getCorrectPath());
-            if (inputStream != null) {
-                properties.load(inputStream);
-            }
-        } catch (Exception ex) {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
+    public static Properties getProperties() {
+        Properties result = properties;
+        if (result == null) {
+            synchronized (PropertyReader.class) {
+                result = properties;
+                if (result == null) {
+                    result = loadProperties();
+                    properties = result;
                 }
             }
         }
-        if (properties.getProperty("config_file") != null) {
-            Properties additionalProperties = getProperties(properties.getProperty("config_file"));
-            properties.putAll(additionalProperties);
-        }
-        return properties;
+        return result;
     }
 
     private static Properties loadProperties() {
-        return properties != null ? properties : readProperties();
-    }
-
-    public static Properties getProperties(String path) {
-        propertiesPath = path;
-        return readProperties();
-    }
-
-    public static String getProperty(String propertyName) {
-        return loadProperties().getProperty(propertyName);
+        Properties props = new Properties();
+        try (InputStream stream = PropertyReader.class.getResourceAsStream(PROPERTIES_PATH)) {
+            if (stream == null) {
+                throw new IllegalStateException("Properties file not found on classpath: " + PROPERTIES_PATH);
+            }
+            props.load(stream);
+        } catch (IOException e) {
+            throw new IllegalStateException("Failed to load properties file: " + PROPERTIES_PATH, e);
+        }
+        return props;
     }
 }
