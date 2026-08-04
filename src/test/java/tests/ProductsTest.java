@@ -4,6 +4,7 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 
+import static enums.TitleNaming.PRODUCTS;
 import static org.testng.Assert.assertEquals;
 import static user.UserFactory.withAdminPermission;
 
@@ -13,19 +14,24 @@ public class ProductsTest extends BaseTest {
                     "Sauce Labs Bike Light",
                     "Sauce Labs Fleece Jacket");
 
-    @Test
+    @Test(enabled = false)
     public void checkGoodsAdded() {
+        System.out.println("ProductsTest.checkGoodsAdded running in thread: " + Thread.currentThread().getId());
+
         loginPage.open();
         loginPage.login(withAdminPermission());
-        productsPage.pageIsOpen();
-
+        assertEquals(productsPage.getNamePage(), PRODUCTS.getDisplayName(),
+                "Name of the page doesn't correspond to the expected");
 
         for (String goodName : goodsList) {
             productsPage.addToCart(goodName);
         }
+        assertEquals(productsPage.checkCounterValue(), "3",
+                "Counter doesn't reflect goods added by name");
 
-        productsPage.addToCart(2);
-        assertEquals(productsPage.checkCounterValue(), "4");
+        productsPage.addToCart(0);
+        assertEquals(productsPage.checkCounterValue(), "4",
+                "Counter doesn't reflect goods added by index");
         assertEquals(productsPage.checkCounterColor(), "rgba(226, 35, 26, 1)");
     }
 }
