@@ -14,7 +14,7 @@ public class ProductsTest extends BaseTest {
                     "Sauce Labs Bike Light",
                     "Sauce Labs Fleece Jacket");
 
-    @Test(enabled = false)
+    @Test(enabled = true)
     public void checkGoodsAdded() {
         System.out.println("ProductsTest.checkGoodsAdded running in thread: " + Thread.currentThread().getId());
 
